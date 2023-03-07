@@ -29,11 +29,11 @@ jobs:
         #mvn azure-functions:package
         popd
         
-    #- name: 'Run Azure Functions action'
-    #  uses: Azure/functions-action@v1
-    #  with:
-    #    app-name: challenge1-1678177983628
-    #    package: 'target/azure-functions/challenge31'
-    #    publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+    - name: 'Run Azure Functions action'
+      uses: Azure/functions-action@v1
+      with:
+        app-name: challenge1-1678177983628
+        package: 'target/azure-functions/challenge1-1678177983628'
+        publish-profile: ${{ secrets.PP }}
     
 
