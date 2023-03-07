@@ -5,11 +5,13 @@ import com.microsoft.azure.functions.HttpMethod;
 import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
+import com.microsoft.azure.functions.OutputBinding;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.CosmosDBOutput;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,6 +26,7 @@ public class CreateRating {
      * This function listens at endpoint "/api/HttpExample". Two ways to invoke it using "curl" command in bash:
      * 1. curl -d "HTTP Body" {your host}/api/HttpExample
      * 2. curl "{your host}/api/HttpExample?name=HTTP%20Query"
+     * @throws IOException
      */
     /*
      * {
@@ -36,28 +39,33 @@ public class CreateRating {
         "userNotes": "I love the subtle notes of orange in this ice cream!"
         }
      */
-    @FunctionName("CreateRating")
-    @CosmosDBOutput(name = "database",
-      databaseName = "hackathon",
-      collectionName = "ratings",
-      createIfNotExists = true,
-      connectionStringSetting = "cosmosdb")
-    public String run(
+    @FunctionName("CreateRating")    
+    public HttpResponseMessage run(
             @HttpTrigger(name = "req",
               methods = {HttpMethod.POST},
-              authLevel = AuthorizationLevel.ANONYMOUS)
-            HttpRequestMessage<Optional<String>> request,
+              authLevel = AuthorizationLevel.ANONYMOUS) 
+              HttpRequestMessage<Optional<String>> request,
+              @CosmosDBOutput(name = "database",
+                databaseName = "hackathon",
+                collectionName = "ratings",
+                createIfNotExists = true,
+                connectionStringSetting = "cosmosdb")
+            OutputBinding<String> outputItem,            
             final ExecutionContext context) {
 
         context.getLogger().info("Document to be saved: " + request.getBody());
         JSONObject jo = new JSONObject(request.getBody().get());
+        String productId = jo.getString("productId");
+
+        // check product    
+        try {
+            String product = Helper.getProduct(productId);        
+        } catch(Exception e) {
+            return request.createResponseBuilder(HttpStatus.NOT_FOUND).build();
+        }
 
         // Generate random ID
         final String id = UUID.randomUUID().toString();
-
-        // Generate document
-        /*final String jsonDocument = "{\"id\":\"" + id + "\", " +
-                                    "\"description\": \"" + name + "\"}";*/
 
         String jsonDocument = """
             {
@@ -69,11 +77,13 @@ public class CreateRating {
                 "rating": %d,
                 "userNotes": "%s"
             }
-                """.formatted(id, jo.getString("userId"), jo.getString("productId"), LocalDateTime.now().toString(), jo.getString("locationName"), jo.getInt("rating"), jo.getString("userNotes"));
+                """.formatted(id, jo.getString("userId"), productId, LocalDateTime.now().toString(), jo.getString("locationName"), jo.getInt("rating"), jo.getString("userNotes"));
 
         
         context.getLogger().info("Document to be saved: " + jsonDocument);
 
-        return jsonDocument;
+        outputItem.setValue(jsonDocument);
+
+        return request.createResponseBuilder(HttpStatus.CREATED).body(jsonDocument).build();
     }
 }
