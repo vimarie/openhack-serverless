@@ -6,6 +6,7 @@ import com.microsoft.azure.functions.HttpRequestMessage;
 import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
+import com.microsoft.azure.functions.annotation.CosmosDBInput;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 
@@ -24,20 +25,22 @@ public class GetRating {
     public HttpResponseMessage run(
             @HttpTrigger(
                 name = "req",
-                methods = {HttpMethod.GET, HttpMethod.POST},
+                methods = {HttpMethod.GET},
                 authLevel = AuthorizationLevel.ANONYMOUS)
                 HttpRequestMessage<Optional<String>> request,
+            @CosmosDBInput(name = "database",
+                databaseName = "hackathon",
+                collectionName = "ratings",
+                id = "{Query.ratingId}",
+                connectionStringSetting = "cosmosdb")
+            Optional<String> item,
             final ExecutionContext context) {
         context.getLogger().info("Java HTTP trigger processed a request.");
 
-        // Parse query parameter
-        final String query = request.getQueryParameters().get("productId");
-        final String name = request.getBody().orElse(query);
-
-        if (name == null) {
-            return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a name on the query string or in the request body").build();
+        if (item.isPresent()) {
+            return request.createResponseBuilder(HttpStatus.OK).body(item.get()).build();            
         } else {
-            return request.createResponseBuilder(HttpStatus.OK).body("The product name for your product id " + name + " is Starfruit Explosion").build();
+            return request.createResponseBuilder(HttpStatus.NOT_FOUND).build();
         }
     }
 }
