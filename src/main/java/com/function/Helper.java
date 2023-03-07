@@ -34,4 +34,8 @@ public class Helper {
     public static String getProduct(String id) throws IOException {
         return Helper.sendGET("https://serverlessohapi.azurewebsites.net/api/GetProduct?productId=" + id);
     }
+
+	public static String getUser(String id) throws IOException {
+        return Helper.sendGET("https://serverlessohapi.azurewebsites.net/api/GetUser?userId=" + id);
+    }
 }

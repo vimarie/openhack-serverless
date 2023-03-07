@@ -13,6 +13,7 @@ import com.microsoft.azure.functions.annotation.HttpTrigger;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,10 +57,22 @@ public class CreateRating {
         context.getLogger().info("Document to be saved: " + request.getBody());
         JSONObject jo = new JSONObject(request.getBody().get());
         String productId = jo.getString("productId");
-
-        // check product    
+        String userId = jo.getString("userId");
+        Integer rating = 0 ;
+        
         try {
-            String product = Helper.getProduct(productId);        
+            rating = jo.getInt("rating");
+            if (rating <= 0 || rating > 5) {
+                throw new Exception("bof");
+            }
+        } catch (Exception e) {
+            return request.createResponseBuilder(HttpStatus.BAD_REQUEST).build();
+        }    
+
+        // checks    
+        try {
+            Helper.getProduct(productId); 
+            Helper.getUser(userId);        
         } catch(Exception e) {
             return request.createResponseBuilder(HttpStatus.NOT_FOUND).build();
         }
@@ -77,7 +90,7 @@ public class CreateRating {
                 "rating": %d,
                 "userNotes": "%s"
             }
-                """.formatted(id, jo.getString("userId"), productId, LocalDateTime.now().toString(), jo.getString("locationName"), jo.getInt("rating"), jo.getString("userNotes"));
+                """.formatted(id, userId, productId, LocalDateTime.now(ZoneOffset.UTC).toString(), jo.getString("locationName"), rating, jo.getString("userNotes"));
 
         
         context.getLogger().info("Document to be saved: " + jsonDocument);
