@@ -26,7 +26,7 @@ public class GetRatings {
             @HttpTrigger(
                 name = "req",
                 methods = {HttpMethod.GET, HttpMethod.POST},
-                route = "getRatings/{userId}",
+                route = "GetRatings/{userId}",
                 authLevel = AuthorizationLevel.ANONYMOUS)
                 HttpRequestMessage<Optional<String>> request,
             @CosmosDBInput(name = "database",

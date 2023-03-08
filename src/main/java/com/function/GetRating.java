@@ -26,12 +26,13 @@ public class GetRating {
             @HttpTrigger(
                 name = "req",
                 methods = {HttpMethod.GET},
+                route = "GetRating/{id}",
                 authLevel = AuthorizationLevel.ANONYMOUS)
                 HttpRequestMessage<Optional<String>> request,
             @CosmosDBInput(name = "database",
                 databaseName = "hackathon",
                 collectionName = "ratings",
-                id = "{Query.ratingId}",
+                sqlQuery = "select * from ratings r where r.id = {id}",
                 connectionStringSetting = "cosmosdb")
             Optional<String> item,
             final ExecutionContext context) {
