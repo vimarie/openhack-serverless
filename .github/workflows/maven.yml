@@ -35,5 +35,6 @@ jobs:
         app-name: challenge1-1678177983628
         package: 'target/azure-functions/challenge1-1678177983628'
         publish-profile: ${{ secrets.PP }}
+        slot-name: staging
     
 
